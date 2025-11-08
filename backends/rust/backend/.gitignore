@@ -1,0 +1,6 @@
+# ignore any directory named "target" anywhere and everything inside it
+**/target/
+
+
+
+.env
