@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { MailService } from './mail/mail.service';
 import mikroOrmConfig from './mikro-orm.config';
 
 const envConfig   = ConfigModule.forRoot({
@@ -14,6 +15,6 @@ const DataBaseConfig = MikroOrmModule.forRoot(
 @Module({
   imports: [UserModule,envConfig,DataBaseConfig],
   controllers: [],
-  providers: [],
+  providers: [MailService],
 })
 export class AppModule {}

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import Verify from "./verify";
 import { AnimatePresence, motion } from "motion/react";
 import { UserCredentials } from "./login-page";
+import { toast } from "sonner";
 
 
 interface LoginFormProps {
@@ -97,11 +98,12 @@ interface LoginFormBaseProps extends React.ComponentProps<"div"> {
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   formData: UserCredentials;
   isVerifying: boolean;
+  toast:typeof toast ;
   setIsVerifying: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // Main login card component with animation
-export function LoginFormBase({onInputChange,handleSubmit,isVerifying,className,setIsVerifying,formData,...props}: LoginFormBaseProps) {
+export function LoginFormBase({onInputChange,handleSubmit,isVerifying,className,setIsVerifying,formData,toast,...props}: LoginFormBaseProps) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
@@ -135,7 +137,7 @@ export function LoginFormBase({onInputChange,handleSubmit,isVerifying,className,
                   <h2 className="text-2xl font-semibold mb-2 text-center">
                     Verify Code
                   </h2>
-                  <Verify />
+                  <Verify id={formData.id ?? ""} toast={toast} />
                   <Button variant="ghost" onClick={() => setIsVerifying(false)}>
                     ← Back to Login
                   </Button>
@@ -149,7 +151,7 @@ export function LoginFormBase({onInputChange,handleSubmit,isVerifying,className,
             <img
               src="/images/login-hero.jpg"
               alt="Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              className="absolute inset-0 h-full w-full object-cover "
             />
           </div>
         </CardContent>

@@ -33,7 +33,7 @@ class Account {
 @Entity()
 export class User {
   @Property({type:'string', primary: true })
-  id?: string;
+  id!: string;
 
   @Property({type:'string',nullable:false})
   firstName!: string;

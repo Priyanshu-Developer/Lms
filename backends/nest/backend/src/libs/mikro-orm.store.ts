@@ -8,33 +8,46 @@ export class MikroOrmStore implements SessionStore {
 
   async get(sid: string, callback: (err: any, session?: any) => void) {
     try {
-      const repo = this.em.getRepository(Session);
-      const session = await repo.findOne({ sid });
-      if (!session) return callback(null);
-      if (session.expiredAt < new Date()) {
-        await this.em.removeAndFlush(session);
+      const fork = this.em.fork();
+      const repo = fork.getRepository(Session);
+      const record = await repo.findOne({ sid });
+
+      if (!record) return callback(null);
+
+      // Check expiration with 5s tolerance
+      if (record.expiredAt.getTime() <= Date.now() - 5000) {
+        await fork.removeAndFlush(record);
         return callback(null);
       }
-      callback(null, session.sess);
+
+      return callback(null, record.sess);
     } catch (err) {
-      callback(err);
+      return callback(err);
     }
   }
 
   async set(sid: string, sess: any, callback?: (err?: any) => void) {
     try {
-      const repo = this.em.getRepository(Session);
-      const expiredAt = new Date(Date.now() + (sess.cookie?.originalMaxAge || 86400000)); // 1 day default
+      const fork = this.em.fork();
+      const repo = fork.getRepository(Session);
 
-      let existing = await repo.findOne({ sid });
-      if (existing) {
-        existing.sess = sess;
-        existing.expiredAt = expiredAt;
+      const expiredAt = new Date(
+        Date.now() + (sess?.cookie?.originalMaxAge ?? 86400000)
+      );
+
+      let record = await repo.findOne({ sid });
+
+      if (record) {
+        record.sess = sess;
+        record.expiredAt = expiredAt;
+        await fork.flush();
+        console.log(`🔁 Updated session: ${sid}`);
       } else {
-        existing = repo.create({ sid, sess, expiredAt });
-        this.em.persist(existing);
+        record = fork.create(Session, { sid, sess, expiredAt });
+        await fork.persistAndFlush(record);
+        console.log(`🆕 Created new session: ${sid}`);
       }
-      await this.em.flush();
+
       callback?.();
     } catch (err) {
       callback?.(err);
@@ -43,17 +56,18 @@ export class MikroOrmStore implements SessionStore {
 
   async destroy(sid: string, callback?: (err?: any) => void) {
     try {
-      const fork = this.em.fork(); // isolate this operation
+      const fork = this.em.fork();
       const repo = fork.getRepository(Session);
+      const record = await repo.findOne({ sid });
 
-      const session = await repo.findOne({ sid });
-      if (session) {
-        await fork.removeAndFlush(session); // ensure actual deletion
+      if (record) {
+        await fork.removeAndFlush(record);
+        console.log(`🗑️  Deleted session: ${sid}`);
       }
+
       callback?.();
     } catch (err) {
       callback?.(err);
     }
   }
-
 }

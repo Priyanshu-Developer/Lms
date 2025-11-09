@@ -41,7 +41,15 @@ async function bootstrap() {
 
   fastifyPassport.registerUserSerializer(async (user) => user);
   fastifyPassport.registerUserDeserializer(async (user) => user);
-  app.setGlobalPrefix('api');
-  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
+app.setGlobalPrefix('api');
+
+const fastifyInstance = (app.getHttpAdapter() as FastifyAdapter).getInstance();
+fastifyInstance.addHook('preHandler', (req, reply, done) => {
+  console.log('Session ID:', req.session?.sessionId);
+  console.log('Cookies:', req.cookies);
+  done();
+});
+
+await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 bootstrap();

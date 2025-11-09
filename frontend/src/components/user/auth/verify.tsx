@@ -3,8 +3,14 @@ import CodeInput from "@/components/inputs/code-input";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api/api";
 import { useState } from "react";
+import { toast } from "sonner";
 
-export default function Verify() {
+interface VerifyProps {
+  id: string;
+  toast: typeof toast;
+}
+
+export default function Verify({id, toast}: VerifyProps) {
   const [code,setCode]= useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -16,9 +22,12 @@ export default function Verify() {
     }
     setLoading(true);
     try{
-      const response = await api.post("/auth/verify", { code }, { withCredentials: true });
+      const response = await api.post("/auth/verify", {id:id, code:code }, { withCredentials: true });
       if (response.status === 200) {
-        // Handle successful verification (e.g., redirect to dashboard)
+       toast.success("Verification successful!", {
+          style: { color: "white", backgroundColor: "#52c41a" },
+        });
+        
       }
     }
     catch(error){
@@ -48,13 +57,14 @@ export default function Verify() {
              {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
             <CodeInput id="verification-code" length={6} code={code} onChangeCode={setCode}/>
             <div className="mt-4">
-              <Button type="submit" className="w-[200px]">
-                Verify
+              <Button type="submit" className="w-[200px]" disabled={loading}>
+                {loading ? "Verifying..." : "Verify"}
               </Button>
             </div>
         </form>
        
-      </div>      
+      </div>    
+
     </div>
   );
 }

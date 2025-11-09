@@ -6,12 +6,14 @@ import { toast, Toaster } from "sonner";
 import { AxiosError } from "axios";
 
 export interface UserCredentials {
+  id?: string;
   email?: string;
   password?: string;
 }
 
 export default function LoginPage() {
   const [formData, setFormData] = useState<UserCredentials>({
+    id: "",
     email: "",
     password: "",
   });
@@ -35,6 +37,8 @@ export default function LoginPage() {
       });
       if (response.status === 200) {
         if (response.data.verify){
+          console.log(response.data)
+          setFormData((prev) => ({ ...prev, id: response.data.id }));
           setIsVerifying(true);
           return;
         }
@@ -44,17 +48,20 @@ export default function LoginPage() {
       }
     } catch (err) {
       if (err instanceof AxiosError) {
-        if (err.response?.status === 403) {
-          if (err.response.data.allowed === false) {
-            toast.error(err.response.data.message, {
+        const resp = err.response;
+        if (resp?.status === 403) {
+          if (resp.data?.allowed === false) {
+            toast.error(resp.data?.message ?? "Forbidden", {
               style: { color: "white", backgroundColor: "#ff4d4f" },
             });
           }
         }
-        if (err.response?.status === 401) {
-          if (err.response.data.verified === false) {
+        if (resp?.status === 401) {
+          if (resp.data?.verified === false) {
+            console.log(resp.data);
+            setFormData((prev) => ({ ...prev, id: resp.data?.id }));
             setIsVerifying(true);
-            toast.error(err.response.data.message, {
+            toast.error(resp.data?.message ?? "Unauthorized", {
               style: { color: "black", backgroundColor: "#fadb14" },
             });
           }
@@ -77,6 +84,7 @@ export default function LoginPage() {
           handleSubmit={handleSubmit}
           isVerifying={isVerifying}
           setIsVerifying={setIsVerifying}
+          toast={toast}
         />
       </div>
       <Toaster position="top-center" richColors />
